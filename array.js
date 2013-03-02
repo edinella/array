@@ -2,10 +2,10 @@
 /**
  * Creates an index on the field specified, if that index does not already exist.
  * @param {array} fields A Array that contains names of the fields to index.
- * @param {boolean} deep Specifies if resultset should also be indexed.
+ * @param {boolean} indexResults Specifies if resultset should also be indexed.
  * @return {array}
  */
-Array.prototype.ensureIndex = function ensureIndex(fields, deep){
+Array.prototype.ensureIndex = function ensureIndex(fields, indexResults){
   
   // extends if necessary
   if(typeof this.indexes == 'undefined') {
@@ -13,6 +13,7 @@ Array.prototype.ensureIndex = function ensureIndex(fields, deep){
       
       // stores indexes
       indexes: {value: {}},
+      indexResults: {value: indexResults},
       
       /**
        * Selects and return objects.
@@ -83,7 +84,7 @@ Array.prototype.ensureIndex = function ensureIndex(fields, deep){
           resultset[r] = this[resultset[r]];
         
         // return optionally chainable resultset
-        if(deep)
+        if(this.indexResults)
           resultset.ensureIndex(Object.keys(this.indexes));
         return resultset;
       }},
@@ -102,7 +103,7 @@ Array.prototype.ensureIndex = function ensureIndex(fields, deep){
        * @param {array} fields Optional. A Array that contains names of the fields to index.
        * @return {array}
        */
-      reIndex: {value: function reIndex(fields){
+      index: {value: function index(fields){
         fields = fields || Object.keys(this.indexes);
         if(typeof fields != 'undefined') {
           this.indexes = {};
@@ -211,7 +212,7 @@ Array.prototype.ensureIndex = function ensureIndex(fields, deep){
        */
       sort: {value: function(){
         Array.prototype.sort.apply(this, arguments);
-        this.reIndex();
+        this.index();
       }},
       
       /**
@@ -246,7 +247,7 @@ Array.prototype.ensureIndex = function ensureIndex(fields, deep){
   }
   
   // apply new indexes
-  this.reIndex(fields);
+  this.index(fields);
   
   // chainable
   return this;

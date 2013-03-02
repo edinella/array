@@ -52,12 +52,12 @@ exports.IndexedArray = {
         var a = [];
         expect(a.find).to.not.exist;
         expect(a.findOne).to.not.exist;
-        expect(a.reIndex).to.not.exist;
+        expect(a.index).to.not.exist;
         expect(a.indexItem).to.not.exist;
         a.ensureIndex();
         expect(a.find).to.be.a('function');
         expect(a.findOne).to.be.a('function');
-        expect(a.reIndex).to.be.a('function');
+        expect(a.index).to.be.a('function');
         expect(a.indexItem).to.be.a('function');
       },
       'with "find" method': {
@@ -76,7 +76,7 @@ exports.IndexedArray = {
             var resultset = a.find();
             expect(resultset.find).to.not.exist;
             expect(resultset.findOne).to.not.exist;
-            expect(resultset.reIndex).to.not.exist;
+            expect(resultset.index).to.not.exist;
             expect(resultset.indexItem).to.not.exist;
           },
           'should be indexed once deep indexing is ensured':function(){
@@ -84,7 +84,7 @@ exports.IndexedArray = {
             var resultset = a.find();
             expect(resultset.find).to.be.a('function');
             expect(resultset.findOne).to.be.a('function');
-            expect(resultset.reIndex).to.be.a('function');
+            expect(resultset.index).to.be.a('function');
             expect(resultset.indexItem).to.be.a('function');
           },
           'should inherit index fields once deep indexing is ensured':function(){
@@ -149,22 +149,22 @@ exports.IndexedArray = {
           expect(result).to.deep.equal(examples[0]);
         },
       },
-      'with "reIndex" method': {
+      'with "index" method': {
         'that should be a function':function(){
           var a = [].ensureIndex();
-          expect(a.reIndex).to.be.a('function');
+          expect(a.index).to.be.a('function');
         },
         'that erases existent index positions':function(){
           var a = [].ensureIndex(['id']);
           expect(a.indexes.id).to.be.a('object');
-          a.reIndex();
+          a.index();
           expect(a.indexes.id).to.deep.equal({});
         },
         'that add fields to index':function(){
           var a = [examples[0], examples[1], examples[2]].ensureIndex(['office']);
           expect(a.indexes.office).to.exist;
           expect(a.indexes.name).to.not.exist;
-          a.reIndex(['name']);
+          a.index(['name']);
           expect(a.indexes.office).to.exist;
           expect(a.indexes.name).to.exist;
         },
