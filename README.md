@@ -59,7 +59,11 @@ var item = users.findOne(query);
 ## Chainability
 "ensureIndex" method is chainable.
 ```js
-var oscar = (obj1, obj2).ensureIndex('id').push(obj3).ensureIndex('office').findOne({'id': '5124610c408b231968000001'});
+var oscar = [obj1, obj2]
+  .ensureIndex('id')
+  .push(obj3)
+  .ensureIndex('office')
+  .findOne({'id': '5124610c408b231968000001'});
 ```
 If you want to "find" method become chainable, set it when activating indexing.
 ```js
