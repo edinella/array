@@ -1,0 +1,3 @@
+--reporter spec
+--ui exports
+--require test/support/setup

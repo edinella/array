@@ -1,0 +1,37 @@
+{
+  "name": "array",
+  "description": "Indexed javascript array",
+  "author": "Ezequias Dinella <ezequias.net@gmail.com>",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/edinella/array.git"
+  },
+  "licenses": [{
+    "type": "MIT",
+    "url": "https://raw.github.com/edinella/array/master/LICENSE"
+  }],
+  "bugs": {
+    "url": "https://github.com/edinella/array/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "1.8.1",
+    "chai": "1.4.2"
+  },
+  "main": "./array.js",
+  "engines": {
+    "node": "0.8.x",
+    "npm":  "1.1.x"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "keywords": [
+    "array",
+    "objects",
+    "index",
+    "indexed",
+    "list"
+  ]
+}
