@@ -13,7 +13,7 @@ This is an Array prototype extension, adding index support for use in javascript
 ### Installation
 Just require ```array.js``` file.
 
-### Tests
+### Run tests
 ```
 npm install
 make test
