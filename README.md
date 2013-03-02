@@ -68,5 +68,7 @@ var oscar = [obj1, obj2]
 If you want to "find" method become chainable, set it when activating indexing.
 ```js
 users.ensureIndex(['id', 'office'], true);
-var results = users.find({'office':1}).findOne({'id': '50bca975acceb00d3d000001'});
+var results = users
+  .find({'office':1})
+  .findOne({'id': '50bca975acceb00d3d000001'});
 ```
