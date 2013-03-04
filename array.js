@@ -1,7 +1,7 @@
 
 /**
  * Creates an index on the field specified, if that index does not already exist.
- * @param {array} fields A Array that contains names of the fields to index.
+ * @param {array|string} fields A Array that contains names of the fields to index, or a single one.
  * @param {boolean} indexResults Specifies if resultset should also be indexed.
  * @return {array}
  */
@@ -136,11 +136,10 @@ Array.prototype.ensureIndex = function ensureIndex(fields, indexResults){
        * Joins two or more arrays, and returns a copy of the joined arrays
        */
       concat: {value: function(){
-        var originalLength = this.length;
-        Array.prototype.concat.apply(this, arguments);
-        for(var position=originalLength,l=this.length;position<l;position++)
-          this.indexItem(this[position], position);
-        return this;
+        var newIndexes = Object.keys(this.indexes) || [];
+        for(var a=0,al=arguments.length;a<al;a++)
+          newIndexes = newIndexes.concat(Object.keys(arguments[a].indexes || {}));
+        return Array.prototype.concat.apply(this, arguments).ensureIndex(newIndexes);
       }},
       
       /**
@@ -247,7 +246,7 @@ Array.prototype.ensureIndex = function ensureIndex(fields, indexResults){
   }
   
   // apply new indexes
-  this.index(fields);
+  this.index(typeof fields == 'string'? [fields]: fields);
   
   // chainable
   return this;

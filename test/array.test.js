@@ -173,6 +173,26 @@ exports.IndexedArray = {
         var a = [].ensureIndex();
         expect(a.indexItem).to.be.a('function');
       },
+      'with "concat" method': {
+        'that should exist': function(){
+          var a = [].ensureIndex();
+          expect(a.concat).to.be.a('function');
+        },
+        'that should concatenate arrays': function(){
+          var a = [examples[0]].ensureIndex();
+          var b = a.concat([examples[1]], [examples[2]]);
+          expect(b).to.deep.equal([examples[0], examples[1], examples[2]]);
+        },
+        'that should preserve arrays indexes': function(){
+          var a = [examples[0]].ensureIndex(['id']);
+          var b = a.concat(
+            [examples[1]].ensureIndex(['name']),
+            [examples[2]].ensureIndex(['office'])
+            );
+          expect(b.indexes).to.exist;
+          expect(b.indexes).to.have.keys(['id', 'name', 'office']);
+        },
+      },
     },
   },
 };
