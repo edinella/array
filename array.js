@@ -7,8 +7,139 @@
  */
 Array.prototype.ensureIndex = function ensureIndex(fields, indexResults){
   
-  // extends if necessary
+  // if not already extended
   if(typeof this.indexes == 'undefined') {
+    
+    /**
+     * Obtains a numeric score relative to operator performance and indexes
+     * @param {object} indexes Instance indexes
+     * @param {object} operator Operator to score
+     * @return {integer}
+     */
+    var scoreOperatorForPerformance = function scoreOperatorForPerformance(indexes, operator){
+      if(typeof indexes[operator.field] == 'undefined') return 0;
+      var indexSize = typeof indexes[operator.field][operator.search] != 'undefined'
+        ? indexes[operator.field][operator.search].length
+        : 0;
+      return indexSize < 2 ? 1 : 0.5;
+    };
+    
+    /**
+     * Orders query operators for performance
+     * @param {object} indexes Instance indexes
+     * @param {object} query Specifies the selection criteria using query operators
+     * @return {array}
+     */
+    var orderOperators = function orderOperators(indexes, query) {
+      var operators = [];
+      for(var field in query)
+        operators.push({'field': field, 'search': query[field]});
+      operators.sort(function sortForPerformance(a, b){
+        return scoreOperatorForPerformance(indexes, b) - scoreOperatorForPerformance(indexes, a);
+      });
+      return operators;
+    };
+    
+    /**
+     * Resultset constructor
+     * @param {array} source Data instance
+     * @return {array}
+     */
+    var Resultset = function Resultset(source){
+      return Object.defineProperties([], {
+        
+        /**
+         * Compares a value with a string or regular expression, and returns if it matches
+         * @param {string} value Value to compare
+         * @param {string|object} search Pattern or string to compare
+         * @return {boolean}
+         */
+        compareValue: {value: function getCompareValue(value, search) {
+          return search instanceof RegExp
+            ? search.test(value)
+            : value === search;
+        }},
+        
+        /**
+         * Runs operators and returns the combined results
+         * @param {array} operators Ordered operators
+         * @return {array}
+         */
+        select: {value:function select(operators) {
+          for(var o=0,ol=operators.length;o<ol;o++)
+            if(!this.runOperator(operators[o]))
+              break;
+          return this.inflateSelection();
+        }},
+        
+        /**
+         * Runs a function in resultset scope, for each item, choosing appropriated source
+         * @param {function} fn Function to receive item and position
+         * @return {array}
+         */
+        eachItem: {value: function eachItem(fn){
+          if(this.length)
+            for(var i=0,l=this.length;i<l;i++)
+              fn.call(this, source[this[i]], i);
+          else
+            for(var i=0,l=source.length;i<l;i++)
+              fn.call(this, source[i], i);
+        }},
+        
+        /**
+         * Reduces resultset for match selection, and returns resultset size
+         * @param {array} selection Selected items
+         * @return {integer}
+         */
+        reduceToSelection: {value: function reduceToSelection(selection){
+          if(this.length == 0)
+            Array.prototype.push.apply(this, selection);
+          else
+            for(var t=0,tl=this.length;t<tl;t++)
+              if(selection.indexOf(this[t]) === -1)
+                this.splice(t, 1);
+          return this.length;
+        }},
+        
+        /**
+         * Runs a single operator, returning resultset size
+         * @param {object} operator Operator to execute
+         * @return {array}
+         */
+        runOperator: {value: function runOperator(operator){
+          var selection = [];
+          
+          // whitout index
+          if(typeof source.indexes[operator.field] == 'undefined')
+            this.eachItem(function(item, i){
+              if(this.compareValue(item[operator.field], operator.search))
+                selection.push(i);
+            });
+          
+          // with index
+          else
+            for(var indexedValue in source.indexes[operator.field])
+              if(this.compareValue(indexedValue, operator.search))
+                for(var c=0,cl=source.indexes[operator.field][indexedValue].length;c<cl;c++)
+                  selection.push(source.indexes[operator.field][indexedValue][c]);
+          
+          // reduce data to selection and return current selection size
+          return this.reduceToSelection(selection);
+        }},
+        
+        /**
+         * Converts resultset items from positions to its real objects, and returns resultset
+         * @return {array}
+         */
+        inflateSelection: {value:function inflate(){
+          for(var r=0,rl=this.length;r<rl;r++)
+            this[r] = source[this[r]];
+          return this;
+        }}
+      });
+    };
+    
+    // extend this instance
     Object.defineProperties(this, {
       
       // stores indexes
@@ -23,65 +154,10 @@ Array.prototype.ensureIndex = function ensureIndex(fields, indexResults){
       find: {value: function find(query){
         
         // order query operators for performance
-        var operators = [];
-        var indexes = this.indexes;
-        for(var field in query)
-          operators.push({'field':field,'search':query[field]});
-        var scoreOperatorForPerformance = function scoreOperatorForPerformance(operator){
-          if(typeof indexes[operator.field] == 'undefined') return 0;
-          var indexSize = 0;
-          if(typeof indexes[operator.field][operator.search] != 'undefined')
-            indexSize += indexes[operator.field][operator.search].length;
-          if(indexSize < 2) return 1;
-          return 0.5;
-        };
-        operators.sort(function sortForPerformance(a, b){
-          return scoreOperatorForPerformance(b)-scoreOperatorForPerformance(a);
-        });
+        var operators = orderOperators(this.indexes, query);
         
-        // define compare functions
-        var compareEqual = function compareEqual(value, search){return value === search};
-        var compareRegExp = function compareRegExp(value, search){return search.test(value)};
-        
-        // run operators
-        var resultset = [];
-        for(var o=0,ol=operators.length;o<ol;o++) {
-          var operatorResultset = [];
-          var compareValue = operators[o].search instanceof RegExp? compareRegExp: compareEqual;
-          if(typeof this.indexes[operators[o].field] == 'undefined') {
-            if(o===0) {
-              for(var t=0,tl=this.length;t<tl;t++)
-                if(compareValue(this[t][operators[o].field], operators[o].search))
-                  operatorResultset.push(t);
-            }
-            else {
-              for(var r=0,rl=resultset.length;r<rl;r++)
-                if(compareValue(this[resultset[r]][operators[o].field], operators[o].search))
-                  operatorResultset.push(resultset[r]);
-            }
-          }
-          else {
-            for(var indexedValue in this.indexes[operators[o].field])
-              if(compareValue(indexedValue, operators[o].search))
-                for(var c=0,cl=this.indexes[operators[o].field][indexedValue].length;c<cl;c++)
-                  operatorResultset.push(this.indexes[operators[o].field][indexedValue][c]);
-          }
-          
-          // reduces resultset
-          if(o===0)
-            resultset = operatorResultset;
-          else
-            for(var r=0,rl=resultset.length;r<rl;r++)
-              if(operatorResultset.indexOf(resultset[r]) === -1)
-                resultset.splice(r, 1);
-          
-          // results not found
-          if(!resultset.length) break;
-        }
-        
-        // inflate resultset
-        for(var r=0,rl=resultset.length;r<rl;r++)
-          resultset[r] = this[resultset[r]];
+        // obtains resultset
+        var resultset = (new Resultset(this)).select(operators);
         
         // return optionally chainable resultset
         if(this.indexResults)
