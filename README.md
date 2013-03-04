@@ -13,7 +13,10 @@ This is an Array prototype extension, adding index support for use in javascript
 ### Installation
 Just require ```array.js``` file.
 
-### Run tests
+### Test
+[![Build Status](https://travis-ci.org/edinella/array.png)](https://travis-ci.org/edinella/array)
+
+To run tests, just do:
 ```
 npm install
 npm test
