@@ -16,7 +16,7 @@ Just require ```array.js``` file.
 ### Run tests
 ```
 npm install
-make test
+npm test
 ```
 
 ## Usage
