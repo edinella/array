@@ -32,7 +32,7 @@ exports.IndexedArray = {
     },
     'should store indexes in Array instance': function(){
       var a = [];
-      a.ensureIndex(['id']);
+      a.ensureIndex('id');
       expect(a.indexes.id).to.be.a('object');
     },
     'should store multiple indexes at once in Array instance': function(){
